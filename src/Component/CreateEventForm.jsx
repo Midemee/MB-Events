@@ -1,34 +1,42 @@
-import React from 'react'
-import { useState } from "react";
+import React from 'react';
+import { useState, useRef } from "react";
 import { MdLocationPin } from "react-icons/md";
 import { useNavigate } from 'react-router-dom';
 import Modal from "../pages/Success";
-import {toast} from "react-toastify"
+import { motion } from "framer-motion"
+import {toast} from "react-toastify";
+import EventPreview from "./EventPreview"
 
 export default function CreateEventForm() {
-  const [showModal, setShowModal] = useState(false);
-  const handleOpenModal = () => setShowModal(true);
-      const navigate= useNavigate();
+      const [showModal, setShowModal] = useState(false);
+
+      const [isPreviewing, setIsPreviewing] = useState(false);
+      // const fileInputRef = useRef(null);
+
+      const navigate = useNavigate();
       const [isLoading, setIsLoading] = useState(false);
       const [photo, setPhoto] = useState(null);
+
       const [errors, setErrors ] = useState({});
-      const [formData, setFormData ] = useState({
+      const initialFormData = {
         date: "",
         title: "",
-        hostedBy: "",
+        host: "",
         timeStart: "",
         timeEnd: "",
         location: "",
         online: false,
         description: "",
         category: "",
-        tags: "",
+        tags: [],
         free: false,
         regular: "",
         vip: "",
         regularEnabled: false,
-        vipEnabled: false,
-      });
+        vipEnabled: false,};
+
+      const [formData, setFormData] = useState(initialFormData);
+      
 
       const handleChange= (e)=>{
         const { name, value, type, checked } = e.target;
@@ -36,18 +44,17 @@ export default function CreateEventForm() {
           setFormData({...formData, free: checked, regular: "", vip: "", regularEnabled: false, vipEnabled: false});
           return;
         }
+        if (name === "tags") {setFormData({...formData,tags: value.split(" ").map(tag => tag.trim()).filter(Boolean)}); return;}
         setFormData({...formData, [name]: type === "checkbox" ? checked : value})
       }
 
       const formValidate = ()=>{
-        const { date, title, hostedBy, timeStart, timeEnd, location, online, description, category, tags, regular, vip, free, regularEnabled, vipEnabled } = formData;
+        const { date, title, host, timeStart, timeEnd, location, online, description, category, tags, regular, vip, free, regularEnabled, vipEnabled } = formData;
 
         const newErrors = {};
 
-        
          if (!photo) newErrors.photo = "Photo is required";
-         if (!title) newErrors.title = "Title is required";
-         if (!hostedBy) newErrors.hostedBy = "Host is required";
+         if (!host) newErrors.host = "Host is required";
          if (!title) newErrors.title = "Title is required";
          if (!date) newErrors.date = "Date is required";
          if (!timeStart) newErrors.timeStart = "Start time is required";
@@ -66,92 +73,124 @@ export default function CreateEventForm() {
          return Object.keys(newErrors).length === 0;
       }
 
-      const handleCancel=(e)=>{
+      // const handleImageEdit= (e)=>{
+      //   e.preventDefault();
+      //   if (fileInputRef.current) {
+      //     fileInputRef.current.click();
+      //   }
+      // }
+
+        const handleCancel =(e)=>{
         e.preventDefault();
         setPhoto(null);
-        setFormData({
-        date: "",
-        title: "",
-        timeStart: "",
-        timeEnd: "",
-        location: "",
-        online: false,
-        description: "",
-        category: "",
-        tags: "",
-        free: false,
-        regular: "",
-        vip: "",
-        regularEnabled: false,
-        vipEnabled: false,
-        })
+        setFormData(initialFormData);
         navigate("/");
       };
 
-const handleSubmit = async (e)=>{
+
+     const handleContinue = (e) => {
         e.preventDefault();
         if (!formValidate()) return;
+        setIsPreviewing(true);
+        };
+
+      const handleSubmit = async (e) => {
+        e.preventDefault();
+        if (!formValidate()) return toast.error("Please fix form errors before continuing");
         setIsLoading(true);
-        console.log(formData);
+        
         const data = new FormData();
+        const token = localStorage.getItem("token");
+        if (!token) {
+          return toast.error("User not authenticated");
+        }
         data.append("photo", photo);
-        data.append("tags", JSON.stringify(formData.tags.split(",").map(tag => tag.trim())));
-        Object.entries(formData).forEach(([key,value])=>{
-        if (key !== "tags") data.append(key, value);});
+        data.append("tags", JSON.stringify(formData.tags));
+        Object.entries(formData).forEach(([key, value]) => {
+          if (key !== "tags") data.append(key, value);
+        });
         try {
-          const response = await fetch(`${import.meta.env.VITE_EVENT_URL}/createEvent`,  {
-            method : "POST",
+          const response = await fetch(`${import.meta.env.VITE_EVENT_URL}/createEvent`, {
+            method: "POST",
+            headers: {
+                  "Content-Type": "application/json",
+              Authorization: `Bearer ${token}`,
+            },
             body: data,
           });
+          
           const result = await response.json();
+          console.log("Response:", result);
+          
           if (response.ok) {
-            console.log(result); 
+            toast.success("Event Created!");
+            setShowModal(true);
+            setFormData(initialFormData);
+            setPhoto(null);}
+          else {
+            toast.error(result.message || "Failed to create an event");
           }
-          toast.success("Event Created!")
-          setShowModal(true)
-          console.log(data);
         } catch (error) {
-          console.error("Network error:" , error)
-          setErrors("Failed to create event")
-           toast.error("Failed to create an event, try again!")
-        }finally{
-          setIsLoading(false)
+          console.error("Network error:", error);
+          toast.error("Failed to create an event, try again!");
+        } finally {
+          setIsLoading(false);
         }
-      }
+      };
 
 
   return (
     <>
-      <form onSubmit={handleSubmit} className="w-full space-y-2">
+      {isPreviewing ?
+      (
+         <EventPreview
+        formData={formData}
+        photo={photo}
+        onEdit={() => setIsPreviewing(false)}
+        onSubmit={handleSubmit}
+        isLoading={isLoading}
+      />
+      ) :
+       (
+        <motion.form onSubmit={handleContinue} initial={{ scale: 0 }} animate={{ scale: 1 }} className="w-full space-y-2">
         <label htmlFor="upload" className="block text-lg font-semibold">Upload Photo</label>
         <div className="w-full h-95 bg-gray-300 flex items-center justify-center rounded-lg overflow-hidden">
           {photo ? (
-            <img
+            <div className="w-full relative">
+              <img
               src={URL.createObjectURL(photo)}
               alt="Uploaded"
               className="h-full w-full object-cover"
             />
+            {/* <button onClick={handleImageEdit} className="py-2 px-8 hover:cursor-pointer rounded-md absolute top-1/2 left-1/2 bg-white text-black">Edit</button> */}
+            </div>
           ) : (
-            <label className="rounded-md px-4 py-2 bg-white text-black text-lg font-semibold cursor-pointer">
+            <label className="rounded-md py-2 px-8 bg-white text-black text-lg font-semibold cursor-pointer">
               <input
               name="photo"
                 type="file"
                 className="hidden"
-                onChange={(e) => setPhoto(e.target.files[0])}
+                onChange={(e) => {const file = e.target.files[0];
+                  if (file && file.type.startsWith("image/")) {
+                    setPhoto(file)
+                  } else{
+                    setErrors(prev => ({...prev, photo : "Only image files are allowed"}))
+                  }
+                }}
               />
               Choose Photo
             </label>)}
         </div>
         {errors.photo && <p className="text-red-500 font-semibold">{errors.photo}</p>}
 
-        <label htmlFor="title" className="block text-lg font-semibold ">Event Title</label>
-        <input type="text" name="title" value={formData.title} onChange={handleChange} className='w-[150px] lg:w-sm px-3 py-2 rounded bg-gray-200 text-black'/>
+        <label htmlFor="title"  className="block text-lg font-semibold">Event Title</label>
+        <input type="text" name="title" value={formData.title} onChange={handleChange} className="w-[150px] lg:w-sm px-3 py-2 rounded bg-gray-200 text-black" />
         {errors.title && <p className="text-red-500 font-semibold">{errors.title}</p>}
 
-        <label htmlFor="host" className="block text-lg font-semibold ">Hosted by</label>
-        <input type="text" name="hostedBy" value={formData.hostedBy} onChange={handleChange} className='w-[150px] lg:w-sm px-3 py-2 rounded bg-gray-200 text-black'/>
-        {errors.hostedBy && <p className="text-red-500 font-semibold">{errors.hostedBy}</p>}
-    
+        <label htmlFor="host"  className="block text-lg font-semibold">Host</label>
+        <input type="text" name="host" value={formData.host} onChange={handleChange} className="w-[150px] lg:w-sm px-3 py-2 rounded bg-gray-200 text-black" />
+        {errors.host && <p className="text-red-500 font-semibold">{errors.host}</p>}
+
         <h1 className="text-xl font-semibold py-2">Time & Location</h1>
 
         <label htmlFor="date"  className="text-lg font-semibold">Date</label>
@@ -220,7 +259,7 @@ const handleSubmit = async (e)=>{
        </div></>)}
        
         </div>
-        <p>{errors.location && <p className="text-red-500 font-semibold">{errors.location}</p>}</p>
+        {errors.location && <p className="text-red-500 font-semibold">{errors.location}</p>}
 
        
 
@@ -232,22 +271,22 @@ const handleSubmit = async (e)=>{
           placeholder="Enter description"
           className="w-full h-50 px-3 py-2 rounded bg-gray-200 text-black"
         />
-        <p>{errors.description && <p className="text-red-500 font-semibold">{errors.description}</p>}</p>
+        {errors.description && <p className="font-semibold text-red-500">{errors.description}</p>}
 
         <h1 className="text-xl font-semibold py-2">Category</h1>
-        <div className="flex items-center gap-3">
+          <div className="flex items-center gap-3">
           <div>
             <label className="block text-lg font-semibold" htmlFor="selectCategories">Select Categories</label>
           <select name="category" value={formData.category} onChange={handleChange} className="w-[180px] px-3 py-2 rounded border-1 border-gray-600 text-gray-600">
             <option value="">Category</option>
-                  <option value="sport">sports</option>
+                  <option value="sports">sports</option>
                   <option value="party">party</option>
                   <option value="concert">concert</option>
                   <option value="tech">tech</option>
                   <option value="religion">religion</option>
                   <option value="education">education</option>
           </select>
-          <p>{errors.category && <p className="text-red-500 font-semibold">{errors.category}</p>}</p>
+          {errors.category && <p className="font-semibold text-red-500">{errors.category}</p>}
         </div>
           <div className="flex flex-col">
             <label className="block text-lg font-semibold" htmlFor="tags">Tags</label>
@@ -258,12 +297,12 @@ const handleSubmit = async (e)=>{
             onChange={handleChange}
             className="w-[150px] lg:w-sm px-3 py-2 rounded bg-gray-200 text-black"
           />
-          <p>{errors.tags && <p className="text-red-500 font-semibold">{errors.tags}</p>}</p>
+          {errors.tags && <p className="font-semibold text-red-500">{errors.tags}</p>}
           </div>
   </div>
   
   
-<h1 className="text-lg font-semibold py-2">Pricing</h1>
+        <h1 className="text-lg font-semibold py-2">Pricing</h1>
 
          <div className="flex items-center gap-20 lg:py-0 lg:gap-[250px]">
 
@@ -307,16 +346,17 @@ const handleSubmit = async (e)=>{
        </>)}
 
         <div className="flex gap-25 py-5">
-          <button type="button" onClick={handleCancel} className="w-[100px] font-bold border-2 rounded-md py-2 px-2 h-[50px] hover:bg-purple-600 hover:border-0 hover:text-white">
+          <button type="button" onClick={handleCancel} className="w-[100px] font-bold border-2 rounded-md py-2 px-2 h-[50px] hover:bg-purple-500 hover:border-0 hover:text-white">
             Cancel
           </button>
 
-          <button className="m-auto w-[120px] font-bold border-2 rounded-md py-2 px-2 h-[50px] bg-purple-600 text-white hover:bg-white hover:text-black" type='submit'>{isLoading ? "Creating event" : "Continue"}</button>
+          <button className="m-auto w-[120px] font-bold border-2 rounded-md py-2 px-2 h-[50px] bg-purple-600 text-white hover:bg-white hover:text-black" type='submit'>{isLoading ? "Loading..." : "Continue"}</button>
 
         </div>
-      </form>
-      <Modal showModal ={showModal}
-      setShowModal={setShowModal}/>
+      </motion.form>
+      )}
+      <Modal showModal={showModal}
+        setShowModal={setShowModal}  />
     </>
   )
 }

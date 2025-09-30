@@ -36,7 +36,7 @@ export default function ForgotPassword() {
       setIsLoading(true);
       setErrors("");
       try {
-        const base_url = import.meta.env.VITE_BASE_URL || "http://localhost:5000/api/user";
+        const base_url = import.meta.env.VITE_BASE_URL || "https://mb-events-server.onrender.com/api/user";
         const response = await fetch(`${base_url}/forgotpassword`, {
           method: "POST",
           headers: { "Content-Type": "application/json" },

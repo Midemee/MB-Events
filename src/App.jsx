@@ -40,7 +40,7 @@ function App() {
       <Route path="/success" element={<Success/>}/>
       <Route path="/events/:eventId" element={<EventDetails/>}/>
       <Route path="/allevents" element={<ProtectedRoute><AllEvents/></ProtectedRoute>}/>
-      <Route path="/yourevents" element={<YourEvents/>}/>
+      <Route path="/yourevents" element={<ProtectedRoute><YourEvents/></ProtectedRoute>}/>
       <Route path="/createevent" element={<ProtectedRoute><CreateEvent/></ProtectedRoute>}/>
 
       <Route path="/comingsoon" element={<ComingSoon/>}/>

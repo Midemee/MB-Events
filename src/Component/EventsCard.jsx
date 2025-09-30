@@ -33,16 +33,25 @@ import moment from "moment"
 
 
 export default function EventsCard({
-  id,
-  image,
+  _id,
+  photo,
+  host,
   title,
-  hostedBy: { fullName } ={},
   category,
   location,
-  price ={},
   date,
-  
+  free,
+  regular,
+  vip
 }) {
+  const id = _id;
+  const image = photo;
+
+  const displayedCategory = category;
+
+  const vipCount = Number(vip) || 0;
+  const regularCount = Number(regular) || 0;
+
   return (
     <Link
       to={`/events/${id}`}
@@ -60,21 +69,21 @@ export default function EventsCard({
             {title}
           </h3>
           <p className="text-lg">
-            <span className="font-semibold">Host: {fullName}</span>
+            <span className="font-semibold">Host: {host}</span>
           </p>
           <p className="mb-0">
             <span className="font-semibold text-lg mt-3 capitalize">
               Category:
             </span>
-            {category}
+            {displayedCategory}
           </p>
           <div className="flex items-center text-lg gap-2">
             <FaLocationDot /> <span>{location}</span>
           </div>
           <div className="flex items-center text-lg gap-2">
-            <FaCalendarAlt /> <span>{moment(date).format("MMM Do YYYY")}</span>
+           <FaCalendarAlt /> <span>{moment(date).format("MMM Do YYYY")}</span>
           </div>
-          {price.free ? (
+          {free ? (
             <div className="text-lg flex items-center gap-2">
               <HiTicket /><span>Free</span>
             </div>
@@ -82,9 +91,9 @@ export default function EventsCard({
             <div className="flex gap-2 items-center text-lg font-semibold">
               <HiTicket />
               <span>
-                {price.vip > 0 && "VIP"}
-                {price.vip > 0 && price.regular > 0 && ", "}
-                {price.regular > 0 && "Regular"}
+                {vipCount > 0 && "VIP"}
+                {vipCount > 0 && regularCount > 0 && ","}
+                {regularCount > 0 && "Regular"}
               </span>
             </div>
           )}
