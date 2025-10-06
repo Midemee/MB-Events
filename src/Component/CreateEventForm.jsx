@@ -113,7 +113,6 @@ export default function CreateEventForm() {
           const response = await fetch(`${import.meta.env.VITE_EVENT_URL}/createEvent`, {
             method: "POST",
             headers: {
-                  "Content-Type": "application/json",
               Authorization: `Bearer ${token}`,
             },
             body: data,

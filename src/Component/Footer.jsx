@@ -7,12 +7,13 @@ import { FaXTwitter } from "react-icons/fa6";
 import { FiYoutube } from "react-icons/fi";
 
 export default function Footer() {
+  
     const [isLoading, setIsLoading] = useState(false);
     const [formData, setFormData] = useState({email: "",});
     const [errors, setErrors] = useState({});
   
     const handleChange = (e) => {
-        const { id, value, type, checked } = e.target;
+    const { id, value, type, checked } = e.target;
     setFormData({ ...formData, [id]: type === "checkbox" ? checked : value });
     };
       const validateForm = () => {
@@ -45,7 +46,6 @@ export default function Footer() {
         console.log(data);
         setFormData({email : ""})
         return data;
-
       } catch (error) {
         console.log(error); 
       } finally {
