@@ -1,13 +1,13 @@
 import {React, useState} from 'react'
 import {Link} from "react-router-dom"
 import logo from "../assets/Images/Frame 1.png"
-import icons from '../assets/Images/Frame 1171276770.png'
 import { FiFacebook } from "react-icons/fi";
 import { FaInstagram } from "react-icons/fa";
 import { FaXTwitter } from "react-icons/fa6";
 import { FiYoutube } from "react-icons/fi";
 
 export default function Footer() {
+    const [isLoading, setIsLoading] = useState(false);
     const [formData, setFormData] = useState({email: "",});
     const [errors, setErrors] = useState({});
   
@@ -31,6 +31,7 @@ export default function Footer() {
       const handleSubmit = async (e)=>{
       e.preventDefault();
       if (!validateForm()) return;
+      setIsLoading(true);
       setErrors("");
       //Backend part
       try {
@@ -41,11 +42,15 @@ export default function Footer() {
         })
         const data = await response.json();
         if (!response.ok) throw new Error(data.message || "Subscription failed");
+        console.log(data);
+        
         return data;
 
       } catch (error) {
         console.log(error); 
-      }
+      } finally {
+      setIsLoading(false);
+    };
     };
   
   return (
@@ -61,7 +66,9 @@ export default function Footer() {
         <form onSubmit={handleSubmit} className="flex w-xs lg:w-[350px] bg-white rounded-md mt-4 py-2 px-2">
         <input onChange={handleChange} value={formData.email} className="py-2 px-2 text-black" id ="email" type="email" placeholder="Email" />
         
-        <button className="w-[150px] lg:w-[200px] bg-purple-600 hover:bg-purple-900 flex items-center justify-center border-0 text-white py-2 lg:px-2 h-[50px] rounded-md font-bold transition ">Subscribe</button>
+        <button type='submit' className="w-[150px] lg:w-[200px] bg-purple-600 hover:bg-purple-900 flex items-center justify-center border-0 text-white py-2 lg:px-2 h-[50px] rounded-md font-bold transition " >
+          {isLoading ? "Subscribing" : "Subscribe"}
+          </button>
         </form>
         {errors.email && (<p className='text-red-600 font-semibold mb-3'>{errors.email}</p>)}
 
