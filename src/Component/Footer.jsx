@@ -43,7 +43,7 @@ export default function Footer() {
         const data = await response.json();
         if (!response.ok) throw new Error(data.message || "Subscription failed");
         console.log(data);
-        
+        setFormData({email : ""})
         return data;
 
       } catch (error) {
