@@ -54,6 +54,8 @@ export default function Signup() {
       newErrors.password = "Password is required";
     } else if (formData.password.length < 6) {
       newErrors.password = "Password must be at least 6 characters";
+    } else if (!/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@.#$!%?&*])[A-Za-z\d@.#$!%?&*]{6,}$/.test(formData.password)) {
+      newErrors.password = "Password must include atleast a lowercase, uppercase, number, and special character";
     }
     if (!formData.confirmPassword) {
       newErrors.confirmPassword = "Please confirm your password";

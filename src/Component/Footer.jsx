@@ -59,7 +59,7 @@ export default function Footer() {
       <p className="text-lg pt-4 w-[300px] lg:w-[420px]">Stay connected and informed with our updates Subscribe to our newsletter for the latest updates on mental health tips, app features, and exclusive offers. Join our community to receive valuable insights and support right in your inbox</p>
 
         <form onSubmit={handleSubmit} className="flex w-xs lg:w-[350px] bg-white rounded-md mt-4 py-2 px-2">
-        <input onChange={handleChange} value={formData.email} className="py-2 px-2 text-black" id = "email" type="email" placeholder="Email" />
+        <input onChange={handleChange} value={formData.email} className="py-2 px-2 text-black" id ="email" type="email" placeholder="Email" />
         
         <button className="w-[150px] lg:w-[200px] bg-purple-600 hover:bg-purple-900 flex items-center justify-center border-0 text-white py-2 lg:px-2 h-[50px] rounded-md font-bold transition ">Subscribe</button>
         </form>

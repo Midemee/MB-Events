@@ -11,13 +11,21 @@ const [userEvents, setUserEvents] = useState({
 });
 
 
-const [searchResults, setSearchResults] = useState([]);
-const [loadingUserEvents, setLoadingUserEvents] = useState(false);
+
 const [user, setUser] = useState(null);
+const [loadingUserEvents, setLoadingUserEvents] = useState(false);
 const [token, setToken] = useState(null);
-const [loading, setIsLoading] = useState(false);
+
+// const [loading, setIsLoading] = useState(false);
 const [error, setError] = useState(null);
+
 const [allEvents, setAllEvents] = useState([]);
+const [upcomingEvents, setUpcomingEvents] = useState([]);
+const [nearbyEvents, setNearbyEvents] = useState([]);
+const [searchResults, setSearchResults] = useState([]);
+
+const [loadingUpcoming, setLoadingUpcoming] = useState(false);
+const [loadingNearby, setLoadingNearby] = useState(false); 
 const [loadingAll, setLoadingAll] = useState(false);
 
 
@@ -40,13 +48,8 @@ useEffect(()=> {
         setToken(storedToken);   
         setUserEvents({ hosting : [], attending: [], previous: [] });
     }
-}, [])
-  const [upcomingEvents, setUpcomingEvents] = useState([]);
-  const [nearbyEvents, setNearbyEvents] = useState([]); 
-  const [loadingUpcoming, setLoadingUpcoming] = useState(false);
-  const [loadingNearby, setLoadingNearby] = useState(false); 
-  
-  
+}, []);
+
   const fetchUpcomingEvents = async () => {
     try {
       setLoadingUpcoming(true);
@@ -98,7 +101,7 @@ const fetchUsersEvents = async (type, userId) => {
         const res = await fetch(`${import.meta.env.VITE_EVENT_URL}/${type}/${userId}`, {
             headers: {
                 "Content-Type" : "application/json",
-                Authorization: `Bearer ${token}`
+                Authorization: `Bearer ${localStorage.getItem("token")}` 
             },
         });
 
@@ -106,7 +109,7 @@ const fetchUsersEvents = async (type, userId) => {
         if(!res.ok) throw new Error(data?.message || "Failed to fetch user events");
 
         setUserEvents((prev) => ({...prev, [type]: data.events || [] }));
-        console.log(data);
+        // console.log(data);
         
     } catch (error) {
        setError(error.message);
@@ -161,10 +164,11 @@ const fetchAllEvents = async (searchQuery = "", appliedFilters = {}) => {
 
         setAllEvents(Array.isArray(data.events) ? data.events : []);
     } catch (error) {
-        setAllEvents([]);
+      setError(error.message);
+      setAllEvents([]);
     }
     finally{
-        setIsLoading(false);
+        setLoadingAll(false);
     }
 };
 
@@ -182,8 +186,8 @@ useEffect(()=> {
 
 
   return (
-    <EventContext.Provider value={{fetchAllEvents, fetchUsersEvents, fetchSearchEvents,fetchUpcomingEvents,fetchNearbyEvents,upcomingEvents, nearbyEvents, loadingUpcoming,
-        loadingNearby, searchResults, loadingUserEvents,userEvents, loadingUserEvents, searchResults, allEvents, user, token, loading, error, query, setQuery}}>
+    <EventContext.Provider value={{user, token, userEvents, allEvents, upcomingEvents, nearbyEvents, searchResults, loadingUpcoming, loadingNearby, loadingAll, loadingUserEvents, error, query, setQuery, 
+    fetchAllEvents, fetchUsersEvents, fetchSearchEvents,fetchUpcomingEvents,fetchNearbyEvents, }}>
         {children}
     </EventContext.Provider>
   );
